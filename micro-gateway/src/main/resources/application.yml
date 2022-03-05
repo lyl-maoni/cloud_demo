@@ -1,0 +1,42 @@
+nacos:
+  namespace: 6172af31-62f0-487a-8694-469c3fe5cf3d
+  server-addr: 127.0.0.1:8848
+server:
+  port: 6001
+#服务名称
+spring:
+  application:
+    name: cloud-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true  #表明gatewayrouter，这个router将以服务名开头的请求路径转发到对应的服务。
+          lowerCaseServiceId: false   #是将请求路径上的服务名配置为小写（因为服务注册的时候，向注册中心注册时将服务名转成大写的了），比如以/service-hi/*的请求路径被路由转发到服务名为service-hi的服务上。
+#          filters:
+#            - StripPrefix=1 #去除第一个级前缀
+
+      default-filters:
+        - name: Hystrix
+          args:
+            name: default
+            fallbackUri: 'forward:/defaultFallback'
+
+      hystrix:
+        command:
+          default:
+            execution:
+              isolation:
+                strategy: SEMAPHORE
+                thread:
+                  timeoutInMilliseconds: 15000
+
+        threadpool:
+          default:
+            coreSize: 100
+    nacos:
+      discovery:
+        server-addr: ${nacos.server-addr}
+        namespace: ${nacos.namespace}
+  main:
+    allow-bean-definition-overriding: true
